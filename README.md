@@ -1,35 +1,35 @@
-# eslint-plugin-local
+This ESLint plugin allows you to implement a custom ESLint plugin including custom rules in your repository without installing them as a dependency.
 
-This ESLint plugin allows you to implement a custom ESLint plugin (including custom rules) for your project. For more information see [this issue](https://github.com/eslint/eslint/issues/8769).
+Originally inspired by [cletusw/eslint-plugin-local-rules](https://github.com/cletusw/eslint-plugin-local-rules).
 
-Inspired by [cletusw/eslint-plugin-local-rules](https://github.com/cletusw/eslint-plugin-local-rules).
+## Installation
 
-## Usage
-
-Installation:
-
-```
+```sh
 npm install --save-dev eslint-plugin-local
 ```
 
-Create a custom plugin at `.eslintplugin.js` or `.eslintplugin/index.js` (refer to [ESLint’s official guide](http://eslint.org/docs/developer-guide/working-with-plugins)):
+## Usage
+
+Create a new file at _.eslint-plugin-local.js_ or _.eslint-plugin-local/index.js_ or use _.cjs_ file extension, which has the content of an [ESLint plugin](https://eslint.org/docs/latest/extend/plugins). For example:
 
 ```js
-exports.rules = {
-  'thou-shalt-use-only-string-literals-in-l10n-functions': {
-    create: function (context) {
-      return { ... }
+module.exports = {
+  rules: {
+    sample: {
+      create: function (context) {
+        // Implementation goes here
+      }
     }
   }
 }
 ```
 
-Add the plugin:
+Then apply the plugin to your _.eslintrc_ file:
 
 ```yml
 plugins:
   - local
 rules:
-  - local/thou-shalt-use-only-string-literals-in-l10n-functions: error
+  - local/sample: error
 ```
 
