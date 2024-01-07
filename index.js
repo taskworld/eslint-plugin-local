@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+// @ts-check
+
 const fs = require('fs')
 const path = require('path')
 
@@ -52,6 +54,8 @@ if (process.argv.includes('test')) {
  * Returns the current dependent repository path which `.git` directory resides.
  * 
  * Do not write `require('../../package.json')` which might break when using PNPM.
+ * @param {string} workPath
+ * @returns {string | null}
  */
 function findRootPath(workPath) {
 	if (workPath === path.dirname(workPath)) {
