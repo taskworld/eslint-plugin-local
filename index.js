@@ -19,16 +19,17 @@ if (!plugin) {
 }
 
 if (plugin.isDirectory()) {
-	const index = fs.readdirSync(path.join(plugin.path, plugin.name), { withFileTypes: true })
+	const index = fs.readdirSync(path.join(rootPath, plugin.name), { withFileTypes: true })
 		.find(item => item.isFile() && /^index\.c?js$/.test(item.name))
 
 	if (!index) {
 		throw new Error('Could not find "index" file in ".eslint-plugin-local" directory.')
 	}
 
-	module.exports = require(path.join(index.path || '', index.name))
+	// Do not use `index.path` as it is only available starting from Node.js v18.17.0 but VSCode uses v18.15.0 as of writing
+	module.exports = require(path.posix.join(rootPath, plugin.name, index.name))
 } else {
-	module.exports = require(path.join(plugin.path || '', plugin.name))
+	module.exports = require(path.posix.join(rootPath, plugin.name))
 }
 
 const { name, version } = require('./package.json')
