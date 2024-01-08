@@ -5,7 +5,7 @@
 const fs = require('fs')
 const path = require('path')
 
-const rootPath = findRootPath(__dirname)
+const rootPath = findRootPath()
 if (!rootPath) {
 	throw new Error('Could not find the root directory of the repository.')
 }
@@ -51,21 +51,30 @@ if (process.argv.includes('test')) {
 }
 
 /**
- * Returns the current dependent repository path which `.git` directory resides.
- * 
- * Do not write `require('../../package.json')` which might break when using PNPM.
- * @param {string} workPath
+ * Returns the root path of the project using the library by checking for a package.json file
+ *
  * @returns {string | null}
  */
-function findRootPath(workPath) {
-	if (workPath === path.dirname(workPath)) {
-		return null
-	}
+function findRootPath() {
+  let currentDir = process.cwd();
 
-	const testPath = path.join(workPath, '.git')
-	if (fs.existsSync(testPath) && fs.lstatSync(testPath).isDirectory()) {
-		return workPath
-	}
+  while (!hasPackageJson(currentDir)) {
+    currentDir = path.resolve(currentDir, '..');
 
-	return findRootPath(path.dirname(workPath))
+    if (currentDir === path.resolve(currentDir, '..')) {
+      return null;
+    }
+  }
+
+  return currentDir;
+}
+
+/**
+ *
+ * @param {string} dir
+ * @returns {boolean}
+ */
+function hasPackageJson(dir) {
+  const packageJsonPath = path.join(dir, 'package.json');
+  return fs.existsSync(packageJsonPath);
 }
