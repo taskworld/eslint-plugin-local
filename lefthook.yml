@@ -1,3 +1,7 @@
+commit-msg:
+  commands:
+    lint:
+      run: npm exec lint-commit-message {1}
 pre-commit:
   commands:
     test:
