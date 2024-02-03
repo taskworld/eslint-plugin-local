@@ -1,14 +1,16 @@
 {
   "name": "eslint-plugin-local",
-  "version": "3.1.0",
+  "version": "3.1.4",
   "repository": {
     "type": "git",
-    "url": "https://github.com/taskworld/eslint-plugin-local.git"
+    "url": "git+https://github.com/taskworld/eslint-plugin-local.git"
   },
   "author": "Taskworld",
   "license": "MIT",
   "main": "index.js",
-  "bin": "index.js",
+  "bin": {
+    "eslint-plugin-local": "index.js"
+  },
   "files": [
     "index.js",
     "test.js"
@@ -24,7 +26,7 @@
     "eslint": ">=6.0.0"
   },
   "devDependencies": {
-    "@thisismanta/semantic-version": "^7.0.0",
+    "@thisismanta/semantic-version": "^8.0.0",
     "@types/node": "<=20.11.0",
     "eslint": "^8.56.0",
     "jest": "^29.7.0",
