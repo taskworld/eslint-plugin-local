@@ -4,6 +4,7 @@
 
 const fs = require('fs')
 const path = require('path')
+const test = require('./test')
 
 const rulePath = findRulePath(__dirname)
 if (!rulePath) {
@@ -23,7 +24,6 @@ if (process.argv.includes('test')) {
 		throw new Error('Could not find any rules.')
 	}
 
-	const test = require('./test')
 	if (test(module.exports.rules) === false) {
 		process.exit(1)
 	}

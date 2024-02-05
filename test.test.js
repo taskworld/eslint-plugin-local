@@ -72,3 +72,29 @@ it('returns false, given a failing test case', () => {
 	expect(console.log).toHaveBeenCalledWith('🔴 foo')
 	expect(console.error).toHaveBeenCalledWith(expect.stringMatching(/Should have no errors but had 1/))
 })
+
+it('runs only the test case wrapped with `only` function', () => {
+	const rules = {
+		foo: {
+			create(context) {
+				return {
+					Program(node) {
+						if (node.body.length > 0) {
+							context.report({
+								node,
+								message: 'bar'
+							})
+						}
+					}
+				}
+			},
+			tests: {
+				valid: [only({ code: '' }), { code: 'void(0)' }],
+				invalid: [],
+			}
+		}
+	}
+
+	expect(test(rules)).not.toBe(false)
+	expect(console.error).not.toHaveBeenCalled()
+})

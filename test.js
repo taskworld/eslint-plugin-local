@@ -10,6 +10,17 @@ const chalk = require('chalk')
  * }} TestCases
  */
 
+const Exclusiveness = Symbol('exclusivenessToken')
+
+global.only = function only(testCase) {
+	// Disallow test case exclusiveness in CI
+	if (!process.env.CI) {
+		testCase[Exclusiveness] = true
+	}
+
+	return testCase
+}
+
 /**
  * @param {Record<string, import('eslint').Rule.RuleModule & { tests?: TestCases }>} rules
  * @returns {void | false}
@@ -18,12 +29,6 @@ module.exports = function test(rules) {
 	// See https://eslint.org/docs/latest/integrate/nodejs-api#ruletester
 	const tester = new RuleTester()
 
-	const exclusiveTestCases = []
-	global.only = function only(testCase) {
-		exclusiveTestCases.push(testCase)
-		return testCase
-	}
-
 	for (const ruleName in rules) {
 		const ruleModule = rules[ruleName]
 		if (!ruleModule.tests || typeof ruleModule.tests !== 'object') {
@@ -31,7 +36,10 @@ module.exports = function test(rules) {
 			continue
 		}
 
-		let skipped = false
+		const oneOrMoreTestCaseIsSkipped = !!(
+			ruleModule.tests.valid.some(testCase => testCase[Exclusiveness]) ||
+			ruleModule.tests.invalid.some(testCase => testCase[Exclusiveness])
+		)
 
 		const validItems = ruleModule.tests.valid.map(testCase => (
 			{ testCase, valid: [testCase], invalid: [] }
@@ -41,8 +49,7 @@ module.exports = function test(rules) {
 		))
 
 		for (const { testCase, valid, invalid } of [...validItems, ...invalidItems]) {
-			if (exclusiveTestCases.length > 0 && !exclusiveTestCases.includes(testCase)) {
-				skipped = true
+			if (oneOrMoreTestCaseIsSkipped && !testCase[Exclusiveness]) {
 				continue
 			}
 
@@ -65,7 +72,7 @@ module.exports = function test(rules) {
 			}
 		}
 
-		console.log((skipped ? '🟡' : '✅') + ' ' + ruleName)
+		console.log((oneOrMoreTestCaseIsSkipped ? '🟡' : '✅') + ' ' + ruleName)
 	}
 
 	console.log('')
