@@ -34,7 +34,7 @@ function only(item) {
  */
 module.exports = function test(
 	rules,
-	{ log, err } = { log: console.log, err: console.error }
+	{ bail, log, err } = { bail: false, log: console.log, err: console.error }
 ) {
 	// See https://eslint.org/docs/latest/integrate/nodejs-api#ruletester
 	const tester = new RuleTester()
@@ -88,7 +88,10 @@ module.exports = function test(
 				err(offset(getPrettyCode(testCase.code), chalk.bgRed))
 				err('')
 				err(offset(error.message, chalk.red))
-				return 1
+
+				if (bail) {
+					return 1
+				}
 			}
 
 		} else if (totalItems.length === runningItems.length) {

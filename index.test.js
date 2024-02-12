@@ -2,6 +2,8 @@ const fs = require('fs')
 const path = require('path')
 const { jest, afterEach, it, expect } = require('@jest/globals')
 
+jest.mock('@thisismanta/pessimist', () => ({ parseArguments: () => ({}) }))
+
 afterEach(() => {
 	jest.resetModules()
 

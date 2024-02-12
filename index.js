@@ -5,6 +5,7 @@
 const fs = require('fs')
 const path = require('path')
 const test = require('./test')
+const { parseArguments } = require('@thisismanta/pessimist')
 
 const rulePath = findRulePath(__dirname)
 if (!rulePath) {
@@ -19,13 +20,19 @@ module.exports.meta.name = name
 module.exports.meta.version = version
 module.exports.rules = module.exports.rules || {}
 
-if (process.argv.includes('test')) {
+const { bail, silent, ...args } = parseArguments(process.argv.slice(2), {
+	bail: false,
+	silent: false,
+})
+
+if (args[0] === 'test') {
 	if (Object.keys(module.exports.rules).length === 0) {
 		throw new Error('Could not find any rules.')
 	}
 
 	const errorCount = test(module.exports.rules, {
-		log: console.log,
+		bail,
+		log: silent ? () => { } : console.log,
 		err: console.error,
 	})
 	if (errorCount > 0) {

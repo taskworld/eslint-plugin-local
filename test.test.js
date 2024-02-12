@@ -79,6 +79,62 @@ it('returns non-zero errors, given any failing test case', () => {
 	const err = jest.fn()
 	const errorCount = test(rules, { log, err })
 
+	expect(errorCount).toBe(2)
+	expect(log.mock.calls.join('\n')).toMatchInlineSnapshot(`
+"
+ PASS  0
+ FAIL  2"
+`)
+	expect(err.mock.calls.join('\n')).toMatchInlineSnapshot(`
+"🔴 foo
+
+   void(0)
+
+   Should have no errors but had 1: [
+     {
+       ruleId: 'foo',
+       severity: 1,
+       message: 'bar',
+       line: 1,
+       column: 1,
+       nodeType: 'Program',
+       endLine: 1,
+       endColumn: 8
+     }
+   ] (1 strictEqual 0)
+
+   
+
+   Should have 1 error but had 0: [] (0 strictEqual 1)"
+`)
+})
+
+it('returns at most one error, given bailing out', () => {
+	const rules = {
+		foo: {
+			create(context) {
+				return {
+					Program(node) {
+						if (node.body.length > 0) {
+							context.report({
+								node,
+								message: 'bar'
+							})
+						}
+					}
+				}
+			},
+			tests: {
+				valid: [{ code: 'void(0)' }],
+				invalid: [{ code: '', errors: [{ message: 'bar' }] }],
+			}
+		}
+	}
+
+	const log = jest.fn()
+	const err = jest.fn()
+	const errorCount = test(rules, { bail: true, log, err })
+
 	expect(errorCount).toBe(1)
 	expect(log.mock.calls.join('\n')).toMatchInlineSnapshot(`""`)
 	expect(err.mock.calls.join('\n')).toMatchInlineSnapshot(`
