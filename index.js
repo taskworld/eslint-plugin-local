@@ -24,8 +24,12 @@ if (process.argv.includes('test')) {
 		throw new Error('Could not find any rules.')
 	}
 
-	if (test(module.exports.rules) === false) {
-		process.exit(1)
+	const errorCount = test(module.exports.rules, {
+		log: console.log,
+		err: console.error,
+	})
+	if (errorCount > 0) {
+		process.exit(errorCount)
 	}
 }
 

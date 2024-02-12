@@ -4,10 +4,9 @@ jest.mock('chalk', () => ({
 	bold: (text) => text,
 	red: (text) => text,
 	bgRed: (text) => text,
+	bgGreen: (text) => text,
+	bgHex: () => (text) => text,
 }))
-
-jest.spyOn(console, 'log').mockImplementation(() => { })
-jest.spyOn(console, 'error').mockImplementation(() => { })
 
 afterEach(() => {
 	jest.clearAllMocks()
@@ -19,7 +18,7 @@ afterAll(() => {
 
 const test = require('./test')
 
-it('does not return false, given no failing test case', () => {
+it('returns zero errors, given no failing test case', () => {
 	const rules = {
 		foo: {
 			create(context) {
@@ -41,12 +40,20 @@ it('does not return false, given no failing test case', () => {
 		}
 	}
 
-	expect(test(rules)).not.toBe(false)
-	expect(console.log).toHaveBeenCalledWith(expect.stringMatching(/Done testing 1 rule/))
-	expect(console.error).not.toHaveBeenCalled()
+	const log = jest.fn()
+	const err = jest.fn()
+	const errorCount = test(rules, { log, err })
+
+	expect(errorCount).toBe(0)
+	expect(log.mock.calls.join('\n')).toMatchInlineSnapshot(`
+"🟢 foo
+
+ PASS  2"
+`)
+	expect(err).not.toHaveBeenCalled()
 })
 
-it('returns false, given a failing test case', () => {
+it('returns non-zero errors, given any failing test case', () => {
 	const rules = {
 		foo: {
 			create(context) {
@@ -68,9 +75,30 @@ it('returns false, given a failing test case', () => {
 		}
 	}
 
-	expect(test(rules)).toBe(false)
-	expect(console.log).toHaveBeenCalledWith('🔴 foo')
-	expect(console.error).toHaveBeenCalledWith(expect.stringMatching(/Should have no errors but had 1/))
+	const log = jest.fn()
+	const err = jest.fn()
+	const errorCount = test(rules, { log, err })
+
+	expect(errorCount).toBe(1)
+	expect(log.mock.calls.join('\n')).toMatchInlineSnapshot(`""`)
+	expect(err.mock.calls.join('\n')).toMatchInlineSnapshot(`
+"🔴 foo
+
+   void(0)
+
+   Should have no errors but had 1: [
+     {
+       ruleId: 'foo',
+       severity: 1,
+       message: 'bar',
+       line: 1,
+       column: 1,
+       nodeType: 'Program',
+       endLine: 1,
+       endColumn: 8
+     }
+   ] (1 strictEqual 0)"
+`)
 })
 
 it('runs only the test case wrapped with `only` function', () => {
@@ -102,8 +130,18 @@ it('runs only the test case wrapped with `only` function', () => {
 		}
 	}
 
-	expect(test(rules)).not.toBe(false)
-	expect(console.error).not.toHaveBeenCalled()
+	const log = jest.fn()
+	const err = jest.fn()
+	const errorCount = test(rules, { log, err })
+
+	expect(errorCount).toBe(0)
 	expect(rules.foo.create).toHaveBeenCalled()
 	expect(rules.loo.create).not.toHaveBeenCalled()
+	expect(log.mock.calls.join('\n')).toMatchInlineSnapshot(`
+"🟡 foo
+⏩ loo
+
+ PASS  1
+ SKIP  3"
+`)
 })

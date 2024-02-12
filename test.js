@@ -4,10 +4,7 @@ const { RuleTester } = require('eslint')
 const chalk = require('chalk')
 
 /**
- * @typedef {{
- * 	valid: Array<import('eslint').RuleTester.ValidTestCase>
- * 	invalid: Array<import('eslint').RuleTester.InvalidTestCase>
- * }} TestCases
+ * @typedef {import('eslint').RuleTester.ValidTestCase | import('eslint').RuleTester.InvalidTestCase} TestCase
  */
 
 const Exclusiveness = Symbol('exclusivenessToken')
@@ -32,10 +29,13 @@ function only(item) {
 }
 
 /**
- * @param {Record<string, import('eslint').Rule.RuleModule & { tests?: TestCases }>} rules
- * @returns {void | false}
+ * @param {Record<string, import('eslint').Rule.RuleModule & { tests?: { valid: Array<import('eslint').RuleTester.ValidTestCase>, invalid: Array<import('eslint').RuleTester.InvalidTestCase> } }>} rules
+ * @returns {number} number of error test cases
  */
-module.exports = function test(rules) {
+module.exports = function test(
+	rules,
+	{ log, err } = { log: console.log, err: console.error }
+) {
 	// See https://eslint.org/docs/latest/integrate/nodejs-api#ruletester
 	const tester = new RuleTester()
 
@@ -44,47 +44,74 @@ module.exports = function test(rules) {
 		ruleModule.tests?.invalid.some(testCase => testCase[Exclusiveness])
 	)
 
+	const stats = { pass: 0, fail: 0, skip: 0 }
 	for (const ruleName in rules) {
 		const ruleModule = rules[ruleName]
 		if (!ruleModule.tests || typeof ruleModule.tests !== 'object') {
-			console.log('⚪ ' + ruleName)
+			log('⚪ ' + ruleName)
 			continue
 		}
 
-		const validItems = ruleModule.tests.valid.map(testCase => (
-			{ testCase, valid: [testCase], invalid: [] }
-		))
-		const invalidItems = ruleModule.tests.invalid.map(testCase => (
-			{ testCase, valid: [], invalid: [testCase] }
-		))
-		const totalItems = [...validItems, ...invalidItems]
-		const nonSkippedItems = totalItems.filter(({ testCase }) => oneOrMoreTestCaseIsSkipped ? !!testCase[Exclusiveness] : true)
-
-		for (const { testCase, valid, invalid } of nonSkippedItems) {
-			try {
-				tester.run(ruleName, ruleModule, { valid, invalid })
-
-			} catch (error) {
-				console.log('🔴 ' + chalk.bold(ruleName))
-
-				console.log('')
-				console.log(offset(getPrettyCode(testCase.code), chalk.bgRed))
-				console.log('')
-
-				console.error(offset(error.message, chalk.red))
-				if (error.stack) {
-					console.error(offset(error.stack, chalk.red))
-				}
-
-				return false
-			}
+		for (const testCase of ruleModule.tests.invalid) {
+			testCase.errors = testCase.errors ?? []
 		}
 
-		console.log((totalItems.length === nonSkippedItems.length ? '🟢' : '🟡') + ' ' + ruleName)
+		/**
+		 * @type {Array<TestCase>}
+		 */
+		const totalItems = [...ruleModule.tests.valid, ...ruleModule.tests.invalid]
+		const runningItems = totalItems.filter(testCase => oneOrMoreTestCaseIsSkipped ? !!testCase[Exclusiveness] : true)
+
+		const errors = runningItems.reduce((results, testCase) => {
+			try {
+				tester.run(
+					ruleName,
+					ruleModule,
+					'errors' in testCase ? { valid: [], invalid: [testCase] } : { valid: [testCase], invalid: [] }
+				)
+
+			} catch (error) {
+				results.push({ testCase, error })
+			}
+
+			return results
+		}, /** @type {Array<{ testCase: TestCase, error: Error }>} */([]))
+
+		stats.skip += totalItems.length - runningItems.length
+		stats.fail += errors.length
+		stats.pass += runningItems.length - errors.length
+
+		if (errors.length > 0) {
+			err('🔴 ' + ruleName)
+			for (const { testCase, error } of errors) {
+				err('')
+				err(offset(getPrettyCode(testCase.code), chalk.bgRed))
+				err('')
+				err(offset(error.message, chalk.red))
+				return 1
+			}
+
+		} else if (totalItems.length === runningItems.length) {
+			log('🟢 ' + ruleName)
+
+		} else if (runningItems.length > 0) {
+			log('🟡 ' + ruleName)
+
+		} else {
+			log('⏩ ' + ruleName)
+		}
 	}
 
-	console.log('')
-	console.log(`Done testing ${Object.keys(rules).length.toLocaleString()} rule${Object.keys(rules).length === 1 ? '' : 's'}.`)
+	log('')
+	log(chalk.bgGreen(chalk.bold(' PASS ')) + ' ' + stats.pass.toLocaleString())
+	if (stats.fail > 0) {
+		log(chalk.bgRed(chalk.bold(' FAIL ')) + ' ' + stats.fail.toLocaleString())
+	}
+	if (stats.skip > 0) {
+		log(chalk.bgHex('#0CAAEE')(chalk.bold(' SKIP ')) + ' ' + stats.skip.toLocaleString())
+	}
+
+	return stats.fail
 }
 
 global.only = only
