@@ -12,13 +12,23 @@ const chalk = require('chalk')
 
 const Exclusiveness = Symbol('exclusivenessToken')
 
-global.only = function only(testCase) {
+/**
+ * @param {Array<{ code: string }> | { code: string }} item 
+ */
+function only(item) {
 	// Disallow test case exclusiveness in CI
 	if (!process.env.CI) {
-		testCase[Exclusiveness] = true
+		if (Array.isArray(item)) {
+			// Support `valid: only([...])` and `invalid: only([...])`
+			for (const listItem of item) {
+				only(listItem)
+			}
+		} else if (typeof item === 'object' && item !== null) {
+			item[Exclusiveness] = true
+		}
 	}
 
-	return testCase
+	return item
 }
 
 /**
@@ -29,6 +39,11 @@ module.exports = function test(rules) {
 	// See https://eslint.org/docs/latest/integrate/nodejs-api#ruletester
 	const tester = new RuleTester()
 
+	const oneOrMoreTestCaseIsSkipped = Object.values(rules).some(ruleModule =>
+		ruleModule.tests?.valid.some(testCase => testCase[Exclusiveness]) ||
+		ruleModule.tests?.invalid.some(testCase => testCase[Exclusiveness])
+	)
+
 	for (const ruleName in rules) {
 		const ruleModule = rules[ruleName]
 		if (!ruleModule.tests || typeof ruleModule.tests !== 'object') {
@@ -36,23 +51,16 @@ module.exports = function test(rules) {
 			continue
 		}
 
-		const oneOrMoreTestCaseIsSkipped = !!(
-			ruleModule.tests.valid.some(testCase => testCase[Exclusiveness]) ||
-			ruleModule.tests.invalid.some(testCase => testCase[Exclusiveness])
-		)
-
 		const validItems = ruleModule.tests.valid.map(testCase => (
 			{ testCase, valid: [testCase], invalid: [] }
 		))
 		const invalidItems = ruleModule.tests.invalid.map(testCase => (
 			{ testCase, valid: [], invalid: [testCase] }
 		))
+		const totalItems = [...validItems, ...invalidItems]
+		const nonSkippedItems = totalItems.filter(({ testCase }) => oneOrMoreTestCaseIsSkipped ? !!testCase[Exclusiveness] : true)
 
-		for (const { testCase, valid, invalid } of [...validItems, ...invalidItems]) {
-			if (oneOrMoreTestCaseIsSkipped && !testCase[Exclusiveness]) {
-				continue
-			}
-
+		for (const { testCase, valid, invalid } of nonSkippedItems) {
 			try {
 				tester.run(ruleName, ruleModule, { valid, invalid })
 
@@ -72,12 +80,15 @@ module.exports = function test(rules) {
 			}
 		}
 
-		console.log((oneOrMoreTestCaseIsSkipped ? '🟡' : '✅') + ' ' + ruleName)
+		console.log((totalItems.length === nonSkippedItems.length ? '🟢' : '🟡') + ' ' + ruleName)
 	}
 
 	console.log('')
-	console.log(`Done testing ${Object.keys(rules).length} rule${Object.keys(rules).length === 1 ? '' : 's'}.`)
+	console.log(`Done testing ${Object.keys(rules).length.toLocaleString()} rule${Object.keys(rules).length === 1 ? '' : 's'}.`)
 }
+
+global.only = only
+module.exports.only = only
 
 /**
  * @param {string} text 
