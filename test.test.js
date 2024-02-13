@@ -201,3 +201,40 @@ it('runs only the test case wrapped with `only` function', () => {
  SKIP  3"
 `)
 })
+
+it('supports string in valid test cases', () => {
+	const rules = {
+		foo: {
+			create(context) {
+				return {
+					Program(node) {
+						if (node.body.length > 0) {
+							context.report({
+								node,
+								message: 'bar'
+							})
+						}
+					}
+				}
+			},
+			tests: {
+				valid: [
+					'',
+					{ code: '' }
+				],
+			}
+		}
+	}
+
+	const log = jest.fn()
+	const err = jest.fn()
+	const errorCount = test(rules, { log, err })
+
+	expect(errorCount).toBe(0)
+	expect(log.mock.calls.join('\n')).toMatchInlineSnapshot(`
+"🟢 foo
+
+ PASS  2"
+`)
+	expect(err).not.toHaveBeenCalled()
+})

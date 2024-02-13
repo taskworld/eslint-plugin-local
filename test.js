@@ -29,7 +29,7 @@ function only(item) {
 }
 
 /**
- * @param {Record<string, import('eslint').Rule.RuleModule & { tests?: { valid: Array<import('eslint').RuleTester.ValidTestCase>, invalid: Array<import('eslint').RuleTester.InvalidTestCase> } }>} rules
+ * @param {Record<string, import('eslint').Rule.RuleModule & { tests?: Parameters<import('eslint').RuleTester['run']>['2'] }>} rules
  * @returns {number} number of error test cases
  */
 module.exports = function test(
@@ -40,26 +40,33 @@ module.exports = function test(
 	const tester = new RuleTester()
 
 	const oneOrMoreTestCaseIsSkipped = Object.values(rules).some(ruleModule =>
-		ruleModule.tests?.valid.some(testCase => testCase[Exclusiveness]) ||
-		ruleModule.tests?.invalid.some(testCase => testCase[Exclusiveness])
+		ruleModule.tests?.valid?.some(testCase => testCase[Exclusiveness]) ||
+		ruleModule.tests?.invalid?.some(testCase => testCase[Exclusiveness])
 	)
 
 	const stats = { pass: 0, fail: 0, skip: 0 }
 	for (const ruleName in rules) {
 		const ruleModule = rules[ruleName]
-		if (!ruleModule.tests || typeof ruleModule.tests !== 'object') {
+		if (
+			!ruleModule.tests ||
+			typeof ruleModule.tests !== 'object' ||
+			!ruleModule.tests.valid && !ruleModule.tests.invalid
+		) {
 			log('⚪ ' + ruleName)
 			continue
 		}
 
-		for (const testCase of ruleModule.tests.invalid) {
+		for (const testCase of ruleModule.tests.invalid || []) {
 			testCase.errors = testCase.errors ?? []
 		}
 
 		/**
 		 * @type {Array<TestCase>}
 		 */
-		const totalItems = [...ruleModule.tests.valid, ...ruleModule.tests.invalid]
+		const totalItems = [
+			...(ruleModule.tests.valid || []).map(testCase => typeof testCase === 'string' ? { code: testCase } : testCase),
+			...(ruleModule.tests.invalid || []),
+		]
 		const runningItems = totalItems.filter(testCase => oneOrMoreTestCaseIsSkipped ? !!testCase[Exclusiveness] : true)
 
 		const errors = runningItems.reduce((results, testCase) => {
