@@ -8,18 +8,20 @@
   "author": "Taskworld",
   "license": "MIT",
   "main": "index.js",
+  "types": "index.d.ts",
   "bin": {
-    "eslint-plugin-local": "index.js"
+    "eslint-plugin-local": "executable.js"
   },
   "files": [
     "index.js",
+    "executable.js",
     "test.js"
   ],
   "volta": {
     "node": "20.11.0"
   },
   "scripts": {
-    "test": "jest --injectGlobals=false index.test test.test",
+    "test": "jest --injectGlobals=false",
     "version": "npm publish"
   },
   "peerDependencies": {

@@ -1,43 +1,25 @@
-#!/usr/bin/env node
-
 // @ts-check
 
 const fs = require('fs')
 const path = require('path')
-const test = require('./test')
-const { parseArguments } = require('@thisismanta/pessimist')
 
 const rulePath = findRulePath(__dirname)
 if (!rulePath) {
-	throw new Error('Could not find ".eslint-plugin-local" file or directory.')
+	throw new Error('Expected ".eslint-plugin-local" file or directory.')
 }
 
-module.exports = require(rulePath) || {}
-
 const { name, version } = require('./package.json')
-module.exports.meta = module.exports.meta || {}
-module.exports.meta.name = name
-module.exports.meta.version = version
-module.exports.rules = module.exports.rules || {}
 
-const { bail, silent, ...args } = parseArguments(process.argv.slice(2), {
-	bail: false,
-	silent: false,
-})
-
-if (args[0] === 'test') {
-	if (Object.keys(module.exports.rules).length === 0) {
-		throw new Error('Could not find any rules.')
-	}
-
-	const errorCount = test(module.exports.rules, {
-		bail,
-		log: silent ? () => { } : console.log,
-		err: console.error,
-	})
-	if (errorCount > 0) {
-		process.exit(errorCount)
-	}
+/**
+ * @type {import('./types').Plugin}
+ */
+module.exports = {
+	meta: {
+		name,
+		version,
+	},
+	rules: {},
+	...require(rulePath),
 }
 
 /**

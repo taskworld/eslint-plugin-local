@@ -16,7 +16,7 @@ afterAll(() => {
 	jest.restoreAllMocks()
 })
 
-const test = require('./test')
+const testRunner = require('./testRunner')
 
 it('returns zero errors, given no failing test case', () => {
 	const rules = {
@@ -42,7 +42,7 @@ it('returns zero errors, given no failing test case', () => {
 
 	const log = jest.fn()
 	const err = jest.fn()
-	const errorCount = test(rules, { log, err })
+	const errorCount = testRunner(rules, { log, err })
 
 	expect(errorCount).toBe(0)
 	expect(log.mock.calls.join('\n')).toMatchInlineSnapshot(`
@@ -77,7 +77,7 @@ it('returns non-zero errors, given any failing test case', () => {
 
 	const log = jest.fn()
 	const err = jest.fn()
-	const errorCount = test(rules, { log, err })
+	const errorCount = testRunner(rules, { log, err })
 
 	expect(errorCount).toBe(2)
 	expect(log.mock.calls.join('\n')).toMatchInlineSnapshot(`
@@ -133,7 +133,7 @@ it('returns at most one error, given bailing out', () => {
 
 	const log = jest.fn()
 	const err = jest.fn()
-	const errorCount = test(rules, { bail: true, log, err })
+	const errorCount = testRunner(rules, { bail: true, log, err })
 
 	expect(errorCount).toBe(1)
 	expect(log.mock.calls.join('\n')).toMatchInlineSnapshot(`""`)
@@ -188,7 +188,7 @@ it('runs only the test case wrapped with `only` function', () => {
 
 	const log = jest.fn()
 	const err = jest.fn()
-	const errorCount = test(rules, { log, err })
+	const errorCount = testRunner(rules, { log, err })
 
 	expect(errorCount).toBe(0)
 	expect(rules.foo.create).toHaveBeenCalled()
@@ -228,7 +228,7 @@ it('supports string in valid test cases', () => {
 
 	const log = jest.fn()
 	const err = jest.fn()
-	const errorCount = test(rules, { log, err })
+	const errorCount = testRunner(rules, { log, err })
 
 	expect(errorCount).toBe(0)
 	expect(log.mock.calls.join('\n')).toMatchInlineSnapshot(`

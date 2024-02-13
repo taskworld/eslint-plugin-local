@@ -23,7 +23,7 @@ afterEach(() => {
 it('throws when ".eslint-plugin-local" is missing', () => {
 	expect(() => {
 		require('./index')
-	}).toThrow(/Could not find/)
+	}).toThrow(/\.eslint-plugin-local/)
 })
 
 it('throws when ".eslint-plugin-local/index" is missing', () => {
@@ -31,7 +31,7 @@ it('throws when ".eslint-plugin-local/index" is missing', () => {
 
 	expect(() => {
 		require('./index')
-	}).toThrow(/Could not find/)
+	}).toThrow(/\.eslint-plugin-local/)
 })
 
 it('exports meta', () => {

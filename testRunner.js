@@ -3,14 +3,10 @@
 const { RuleTester } = require('eslint')
 const chalk = require('chalk')
 
-/**
- * @typedef {import('eslint').RuleTester.ValidTestCase | import('eslint').RuleTester.InvalidTestCase} TestCase
- */
-
 const Exclusiveness = Symbol('exclusivenessToken')
 
 /**
- * @param {Array<{ code: string }> | { code: string }} item 
+ * @param {Array<import('./types').TestCase> | import('./types').TestCase} item 
  */
 function only(item) {
 	// Disallow test case exclusiveness in CI
@@ -29,10 +25,11 @@ function only(item) {
 }
 
 /**
- * @param {Record<string, import('eslint').Rule.RuleModule & { tests?: Parameters<import('eslint').RuleTester['run']>['2'] }>} rules
+ * @param {import('./types').Plugin['rules']} rules
+ * @param {{ bail: boolean, log: (line: string) => void, err: (line: string) => void }} [options={ bail: false, log: console.log, err: console.error }]
  * @returns {number} number of error test cases
  */
-module.exports = function test(
+function testRunner(
 	rules,
 	{ bail, log, err } = { bail: false, log: console.log, err: console.error }
 ) {
@@ -61,7 +58,7 @@ module.exports = function test(
 		}
 
 		/**
-		 * @type {Array<TestCase>}
+		 * @type {Array<import('./types').TestCase>}
 		 */
 		const totalItems = [
 			...(ruleModule.tests.valid || []).map(testCase => typeof testCase === 'string' ? { code: testCase } : testCase),
@@ -82,7 +79,7 @@ module.exports = function test(
 			}
 
 			return results
-		}, /** @type {Array<{ testCase: TestCase, error: Error }>} */([]))
+		}, /** @type {Array<{ testCase: import('./types').TestCase, error: Error }>} */([]))
 
 		stats.skip += totalItems.length - runningItems.length
 		stats.fail += errors.length
@@ -125,6 +122,7 @@ module.exports = function test(
 }
 
 global.only = only
+module.exports = testRunner
 module.exports.only = only
 
 /**
