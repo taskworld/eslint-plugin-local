@@ -8,14 +8,15 @@
   "author": "Taskworld",
   "license": "MIT",
   "main": "index.js",
-  "types": "index.d.ts",
+  "types": "types.d.ts",
   "bin": {
     "eslint-plugin-local": "executable.js"
   },
   "files": [
     "index.js",
     "executable.js",
-    "test.js"
+    "test.js",
+    "types.d.ts"
   ],
   "volta": {
     "node": "20.11.0"
