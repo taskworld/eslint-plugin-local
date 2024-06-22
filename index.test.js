@@ -8,6 +8,8 @@ afterEach(() => {
 	jest.resetModules()
 
 	for (const item of [
+		'.eslint.local.js',
+		'.eslint.local.cjs',
 		'.eslint-plugin-local.js',
 		'.eslint-plugin-local.cjs',
 		'.eslint-plugin-local',
@@ -46,6 +48,8 @@ it('exports meta', () => {
 })
 
 it.each([
+	['.eslint.local.js'],
+	['.eslint.local.cjs'],
 	['.eslint-plugin-local.js'],
 	['.eslint-plugin-local.cjs'],
 ])('exports "%s"', (item) => {

@@ -34,10 +34,12 @@ function testRunner(
 	{ bail, log, err } = { bail: false, log: console.log, err: console.error }
 ) {
 	// See https://eslint.org/docs/latest/integrate/nodejs-api#ruletester
-	const tester = new RuleTester({ parserOptions: {
-		ecmaVersion: 'latest',
-		sourceType: 'module',
-	  }})
+	const tester = new RuleTester({
+		languageOptions: {
+			ecmaVersion: 'latest',
+			sourceType: 'module',
+		}
+	})
 
 	const oneOrMoreTestCaseIsSkipped = Object.values(rules).some(ruleModule =>
 		ruleModule.tests?.valid?.some(testCase => testCase[Exclusiveness]) ||

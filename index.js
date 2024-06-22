@@ -34,7 +34,10 @@ function findRulePath(workPath) {
 
 	const item = fs.readdirSync(workPath, { withFileTypes: true })
 		.find(item =>
-			item.isFile() && /^\.eslint-plugin-local\.c?js$/.test(item.name) ||
+			item.isFile() && (
+				/^\.eslint.local\.c?js$/.test(item.name) ||
+				/^\.eslint-plugin-local\.c?js$/.test(item.name)
+			) ||
 			item.isDirectory() && item.name === '.eslint-plugin-local'
 		)
 

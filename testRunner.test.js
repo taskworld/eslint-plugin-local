@@ -92,7 +92,7 @@ it('returns non-zero errors, given any failing test case', () => {
 
    Should have no errors but had 1: [
      {
-       ruleId: 'foo',
+       ruleId: 'rule-to-test/foo',
        severity: 1,
        message: 'bar',
        line: 1,
@@ -144,7 +144,7 @@ it('returns at most one error, given bailing out', () => {
 
    Should have no errors but had 1: [
      {
-       ruleId: 'foo',
+       ruleId: 'rule-to-test/foo',
        severity: 1,
        message: 'bar',
        line: 1,
