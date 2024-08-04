@@ -1,11 +1,14 @@
 const { jest, afterEach, afterAll, it, expect } = require('@jest/globals')
 
 jest.mock('chalk', () => ({
-	bold: (text) => text,
 	red: (text) => text,
 	bgRed: (text) => text,
 	bgGreen: (text) => text,
+	hex: () => (text) => text,
 	bgHex: () => (text) => text,
+	white: {
+		bold: (text) => text
+	}
 }))
 
 afterEach(() => {
@@ -81,16 +84,16 @@ it('returns non-zero errors, given any failing test case', () => {
 
 	expect(errorCount).toBe(2)
 	expect(log.mock.calls.join('\n')).toMatchInlineSnapshot(`
-"
+"🔴 foo
+ 1 void(0)
+
+ 1 
+
  PASS  0
  FAIL  2"
 `)
 	expect(err.mock.calls.join('\n')).toMatchInlineSnapshot(`
-"🔴 foo
-
-   void(0)
-
-   Should have no errors but had 1: [
+"   Should have no errors but had 1: [
      {
        ruleId: 'rule-to-test/foo',
        severity: 1,
@@ -102,9 +105,6 @@ it('returns non-zero errors, given any failing test case', () => {
        endColumn: 8
      }
    ] (1 strictEqual 0)
-
-   
-
    Should have 1 error but had 0: [] (0 strictEqual 1)"
 `)
 })
@@ -136,13 +136,12 @@ it('returns at most one error, given bailing out', () => {
 	const errorCount = testRunner(rules, { bail: true, log, err })
 
 	expect(errorCount).toBe(1)
-	expect(log.mock.calls.join('\n')).toMatchInlineSnapshot(`""`)
-	expect(err.mock.calls.join('\n')).toMatchInlineSnapshot(`
+	expect(log.mock.calls.join('\n')).toMatchInlineSnapshot(`
 "🔴 foo
-
-   void(0)
-
-   Should have no errors but had 1: [
+ 1 void(0)"
+`)
+	expect(err.mock.calls.join('\n')).toMatchInlineSnapshot(`
+"   Should have no errors but had 1: [
      {
        ruleId: 'rule-to-test/foo',
        severity: 1,
@@ -194,11 +193,11 @@ it('runs only the test case wrapped with `only` function', () => {
 	expect(rules.foo.create).toHaveBeenCalled()
 	expect(rules.loo.create).not.toHaveBeenCalled()
 	expect(log.mock.calls.join('\n')).toMatchInlineSnapshot(`
-"🟡 foo
-⏩ loo
+"⏩ loo
+🟡 foo
 
- PASS  1
- SKIP  3"
+ SKIP  3
+ PASS  1"
 `)
 })
 

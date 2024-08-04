@@ -10,7 +10,7 @@ if (process.argv[2] === 'test') {
 		silent: false,
 	})
 
-	// Do not move this below as `global.only` must be injected before anything
+	// Do not move this line any lower as `global.only` must be injected before anything
 	const testRunner = require('./testRunner')
 
 	const { rules } = require('./index')
