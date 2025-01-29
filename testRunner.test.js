@@ -104,8 +104,14 @@ it('returns non-zero errors, given any failing test case', () => {
        endLine: 1,
        endColumn: 8
      }
-   ] (1 strictEqual 0)
-   Should have 1 error but had 0: [] (0 strictEqual 1)"
+   ]
+   
+   1 !== 0
+    (1 strictEqual 0)
+   Should have 1 error but had 0: []
+   
+   0 !== 1
+    (0 strictEqual 1)"
 `)
 })
 
@@ -152,7 +158,10 @@ it('returns at most one error, given bailing out', () => {
        endLine: 1,
        endColumn: 8
      }
-   ] (1 strictEqual 0)"
+   ]
+   
+   1 !== 0
+    (1 strictEqual 0)"
 `)
 })
 
